@@ -51,7 +51,7 @@ export default function Login() {
       const role = await AsyncStorage.getItem("role");
 
       console.warn('Ahora dirigira al admin o cliente');
-      console.log("Test de flujo completado");
+      console.log("Test de flujo completado OK");
 
 
       if (role === 'ADMIN') {
