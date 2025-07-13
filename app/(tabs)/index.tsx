@@ -52,6 +52,7 @@ export default function Login() {
 
       console.warn('Ahora dirigira al admin o cliente');
       console.log("Test de flujo completado OK");
+      console.log("Test de flujo completado OK VERSION 1.0");
 
 
       if (role === 'ADMIN') {
