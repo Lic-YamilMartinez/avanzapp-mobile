@@ -1,31 +1,18 @@
-  import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-//import './app.css';
+// app/_layout.tsx
+import { Stack } from "expo-router";
+import { ReportesProvider } from "./context/ReportesContext"; // 👈 ajustá la ruta si hace falta
 
-
-  import { useColorScheme } from '@/hooks/useColorScheme';
-
-  export default function RootLayout() {
-    const colorScheme = useColorScheme();
-    const [loaded] = useFonts({
-      SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    });
-
-    if (!loaded) {
-      // Async font loading only occurs in development.
-      return null;
-    }
-
-    return (
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    );
-  }
+export default function RootLayout() {
+  return (
+    <ReportesProvider>
+      <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
+        {/* Login en / */}
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        {/* Dashboard del cliente */}
+        <Stack.Screen name="app/index" options={{ headerShown: false }} />
+        {/* Grupo de tabs (solo para vistas internas) */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </ReportesProvider>
+  );
+}
