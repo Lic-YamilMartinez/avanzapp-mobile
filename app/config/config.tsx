@@ -19,7 +19,7 @@ const CONFIG = {
   },
 
   production: {
-    BASE_URL: "http://200.85.35.18:8080",
+    BASE_URL: "https://api.avanzaconsultorespy.com",
   },
 };
 
