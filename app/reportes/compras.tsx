@@ -41,6 +41,10 @@ type DNITCompra = {
   rucTitular?: string;
   rubroGastos?: string;
   observacion?: string;
+  observacionNormalizada?: string;
+  observacionCategoria?: string;
+  observacionNormalizacionMetodo?: string;
+  observacionNormalizacionConfianza?: number | string;
 
   afectacionExento?: string;
   afectacionGrav10?: string;
@@ -169,11 +173,16 @@ const sortPeriodos = (a: string, b: string) => {
 };
 
 const categoriaDesdeAfectacion = (c: DNITCompra): string => {
-  const rubroIrp = (c.rubroGastos || "").trim();
+  if (c.fuente === "IRP") {
+    const observacionNormalizada = (c.observacionCategoria || "").trim();
+    const rubroIrp = (c.rubroGastos || "").trim();
+    return observacionNormalizada || rubroIrp || "Sin categoría";
+  }
+
   const a10 = (c.afectacionGrav10 || "").trim();
   const a5 = (c.afectacionGrav5 || "").trim();
   const ex = (c.afectacionExento || "").trim();
-  return rubroIrp || a10 || a5 || ex || "Sin categoría";
+  return a10 || a5 || ex || "Sin categoría";
 };
 
 /* ===== Pantalla ===== */
