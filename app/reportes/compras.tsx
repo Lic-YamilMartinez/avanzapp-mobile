@@ -15,6 +15,7 @@ import { useReportes } from "../context/ReportesContext";
 type DNITCompra = {
   id: number;
   usuarioId?: number;
+  fuente?: "IVA" | "IRP";
   proveedorRuc?: string;
   proveedorNombre?: string;
   nroComprobante?: string;
@@ -32,6 +33,18 @@ type DNITCompra = {
   exenta?: number | string;
   totalComprobante?: number | string;
   baseImponible?: number | string;
+  montoCompra?: number | string;
+  montoIva?: number | string;
+  montoPagado?: number | string;
+  gastos?: number | string;
+  timbrado?: string;
+  rucTitular?: string;
+  rubroGastos?: string;
+  observacion?: string;
+  observacionNormalizada?: string;
+  observacionCategoria?: string;
+  observacionNormalizacionMetodo?: string;
+  observacionNormalizacionConfianza?: number | string;
 
   afectacionExento?: string;
   afectacionGrav10?: string;
@@ -125,9 +138,12 @@ const isNC = (c: DNITCompra) => {
 
 const montoTotal = (c: DNITCompra) => {
   const total = toNum(c.totalComprobante);
-  return total !== 0
-    ? total
-    : toNum(c.gravada10) + toNum(c.gravada5) + toNum(c.exenta);
+  if (total !== 0) return total;
+
+  const totalIrp = toNum(c.montoCompra) + toNum(c.montoIva);
+  if (totalIrp !== 0) return totalIrp;
+
+  return toNum(c.gravada10) + toNum(c.gravada5) + toNum(c.exenta);
 };
 
 const periodoKey = (c: DNITCompra) => {
@@ -157,6 +173,12 @@ const sortPeriodos = (a: string, b: string) => {
 };
 
 const categoriaDesdeAfectacion = (c: DNITCompra): string => {
+  if (c.fuente === "IRP") {
+    const observacionNormalizada = (c.observacionCategoria || "").trim();
+    const rubroIrp = (c.rubroGastos || "").trim();
+    return observacionNormalizada || rubroIrp || "Sin categoría";
+  }
+
   const a10 = (c.afectacionGrav10 || "").trim();
   const a5 = (c.afectacionGrav5 || "").trim();
   const ex = (c.afectacionExento || "").trim();
@@ -237,6 +259,11 @@ export default function ReportesCompras() {
       return y === year && m === month;
     });
   }, [compras, year, month]);
+
+  const fuenteMensual = useMemo<"IVA" | "IRP" | null>(() => {
+    if (filtradas.length === 0) return null;
+    return filtradas.some((c) => c.fuente === "IRP") ? "IRP" : "IVA";
+  }, [filtradas]);
 
   /* ===== KPIs + categorías por afectación (mensual) ===== */
   const { kpiMensual, categoriasAfectacion } = useMemo(() => {
@@ -562,6 +589,14 @@ export default function ReportesCompras() {
                 disabled={!year}
               />
             </View>
+
+            {fuenteMensual && (
+              <View style={tw`self-start bg-yellow-100 px-3 py-1 rounded-full mt-2`}>
+                <Text style={tw`text-xs font-bold text-yellow-800`}>
+                  Fuente del mes: {fuenteMensual}
+                </Text>
+              </View>
+            )}
 
             <View style={tw`flex-row flex-wrap -mx-1 mt-3`}>
               <KpiCard

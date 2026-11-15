@@ -19,10 +19,47 @@ import * as XLSX from 'xlsx';
 import fondo from '../../assets/bg-contabilidad.png';
 import { BASE_URL } from '../config/config';
 
+type FormatoCompras = 'IVA' | 'IRP' | null;
+
+const normalizarHeader = (value: any) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/º|°/g, '')
+    .replace(/[.\-/%]/g, ' ')
+    .trim()
+    .replace(/\s+/g, '_');
+
+const detectarFormatoCompras = (rows: any[][]): FormatoCompras => {
+  for (const row of rows.slice(0, 20)) {
+    const headers = new Set((row ?? []).map(normalizarHeader).filter(Boolean));
+
+    const esIrp =
+      headers.has('FECHA') &&
+      (headers.has('NUMERO_DEL_DOCUMENTO') || headers.has('NRO_DEL_DOCUMENTO')) &&
+      (headers.has('MONTO_DE_COMPRA') || headers.has('MONTO_COMPRA')) &&
+      headers.has('TOTAL_COMPROBANTE');
+
+    if (esIrp) return 'IRP';
+
+    const esIva =
+      headers.has('DIA') &&
+      (headers.has('DOCUMENTO_NRO') ||
+        headers.has('DOCUMENTO_NO') ||
+        headers.has('DOC_NRO'));
+
+    if (esIva) return 'IVA';
+  }
+
+  return null;
+};
+
 export default function ImportDNIT() {
   const [fileName, setFileName] = useState('');
   const [previewData, setPreviewData] = useState<any[][]>([]);
   const [fileUri, setFileUri] = useState('');
+  const [detectedFormat, setDetectedFormat] = useState<FormatoCompras>(null);
   const { id } = useLocalSearchParams(); // ID del cliente desde la URL
 
   const pickDocument = async () => {
@@ -46,7 +83,8 @@ export default function ImportDNIT() {
             const workbook = XLSX.read(data, { type: 'binary' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const parsed = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-            setPreviewData(parsed.slice(0, 5));
+            setPreviewData(parsed.slice(0, 8));
+            setDetectedFormat(detectarFormatoCompras(parsed));
           };
 
           reader.readAsBinaryString(blob);
@@ -59,7 +97,8 @@ export default function ImportDNIT() {
           const workbook = XLSX.read(b64, { type: 'base64' });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const parsed = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-          setPreviewData(parsed.slice(0, 5));
+          setPreviewData(parsed.slice(0, 8));
+          setDetectedFormat(detectarFormatoCompras(parsed));
         }
       }
     } catch (error) {
@@ -78,6 +117,14 @@ export default function ImportDNIT() {
   const realizarImportacion = async (overwrite = false) => {
     if (!fileUri) {
       Alert.alert('Error', 'Primero selecciona un archivo.');
+      return;
+    }
+
+    if (!detectedFormat) {
+      Alert.alert(
+        'Formato no reconocido',
+        'El archivo debe corresponder a Compras IVA o Libro de Egresos IRP.',
+      );
       return;
     }
 
@@ -110,8 +157,15 @@ export default function ImportDNIT() {
       try { result = await response.json(); } catch {}
 
       if (response.ok) {
+        const fuente = result?.fuente || detectedFormat;
+        const periodos = Array.isArray(result?.periodos)
+          ? result.periodos.join(', ')
+          : '';
         const okMsg =
           (result?.mensaje || 'Archivo procesado') +
+          (fuente ? `\nFuente detectada: ${fuente}` : '') +
+          (periodos ? `\nPeriodo(s): ${periodos}` : '') +
+          (result?.advertencia ? `\n\n⚠️ ${result.advertencia}` : '') +
           (result?.resumen ? `\n${result.resumen}` : '');
         Alert.alert('✅ Importación Exitosa', okMsg);
       } else if (response.status === 409) {
@@ -139,7 +193,10 @@ export default function ImportDNIT() {
   return (
     <ImageBackground source={fondo} style={styles.background} resizeMode="cover">
       <View style={styles.container}>
-        <Text style={styles.title}>Importar Datos DNIT</Text>
+        <Text style={styles.title}>Importar Compras DNIT</Text>
+        <Text style={styles.subtitle}>
+          Cargá el reporte mensual del cliente. AvanzApp detecta automáticamente si corresponde a IVA o IRP.
+        </Text>
 
         <TouchableOpacity style={styles.button} onPress={pickDocument}>
           <MaterialIcons name="folder-open" size={20} color="white" style={styles.icon} />
@@ -149,6 +206,18 @@ export default function ImportDNIT() {
         {fileName ? (
           <View style={styles.previewBox}>
             <Text style={styles.fileName}>📄 {fileName}</Text>
+            <View
+              style={[
+                styles.formatBadge,
+                detectedFormat ? styles.formatOk : styles.formatError,
+              ]}
+            >
+              <Text style={styles.formatText}>
+                {detectedFormat
+                  ? `Formato detectado: ${detectedFormat}`
+                  : 'Formato no reconocido'}
+              </Text>
+            </View>
             <ScrollView horizontal>
               <View>
                 {previewData.map((row, rowIndex) => (
@@ -194,6 +263,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 10,
     fontWeight: '600',
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: '#6b7280',
+    marginBottom: 10,
+  },
+  formatBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
+  formatOk: {
+    backgroundColor: '#dcfce7',
+  },
+  formatError: {
+    backgroundColor: '#fee2e2',
+  },
+  formatText: {
+    fontWeight: '700',
+    color: '#374151',
   },
   previewBox: {
     marginTop: 20,

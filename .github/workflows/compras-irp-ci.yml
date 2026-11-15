@@ -1,0 +1,25 @@
+name: Compras IRP Mobile CI
+
+on:
+  push:
+    branches:
+      - feat/compras-irp
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Expo doctor
+        run: npx expo-doctor
+      - name: Lint
+        run: npm run lint
