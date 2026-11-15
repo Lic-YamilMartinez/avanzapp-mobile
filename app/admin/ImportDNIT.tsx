@@ -194,7 +194,7 @@ export default function ImportDNIT() {
       <View style={styles.container}>
         <Text style={styles.title}>Importar Compras DNIT</Text>
         <Text style={styles.subtitle}>
-          AvanzApp detecta automáticamente si el archivo corresponde a IVA o IRP.
+          Cargá el reporte mensual del cliente. AvanzApp detecta automáticamente si corresponde a IVA o IRP.
         </Text>
 
         <TouchableOpacity style={styles.button} onPress={pickDocument}>
