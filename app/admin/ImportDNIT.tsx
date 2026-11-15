@@ -97,7 +97,8 @@ export default function ImportDNIT() {
           const workbook = XLSX.read(b64, { type: 'base64' });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const parsed = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-          setPreviewData(parsed.slice(0, 5));
+          setPreviewData(parsed.slice(0, 8));
+          setDetectedFormat(detectarFormatoCompras(parsed));
         }
       }
     } catch (error) {
