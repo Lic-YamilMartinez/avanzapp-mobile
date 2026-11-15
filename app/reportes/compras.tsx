@@ -251,6 +251,11 @@ export default function ReportesCompras() {
     });
   }, [compras, year, month]);
 
+  const fuenteMensual = useMemo<"IVA" | "IRP" | null>(() => {
+    if (filtradas.length === 0) return null;
+    return filtradas.some((c) => c.fuente === "IRP") ? "IRP" : "IVA";
+  }, [filtradas]);
+
   /* ===== KPIs + categorías por afectación (mensual) ===== */
   const { kpiMensual, categoriasAfectacion } = useMemo(() => {
     let ncCompras = 0;
