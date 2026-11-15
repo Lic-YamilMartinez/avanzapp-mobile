@@ -165,6 +165,7 @@ export default function ImportDNIT() {
           (result?.mensaje || 'Archivo procesado') +
           (fuente ? `\nFuente detectada: ${fuente}` : '') +
           (periodos ? `\nPeriodo(s): ${periodos}` : '') +
+          (result?.advertencia ? `\n\n⚠️ ${result.advertencia}` : '') +
           (result?.resumen ? `\n${result.resumen}` : '');
         Alert.alert('✅ Importación Exitosa', okMsg);
       } else if (response.status === 409) {
