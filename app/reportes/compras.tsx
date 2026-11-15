@@ -581,6 +581,14 @@ export default function ReportesCompras() {
               />
             </View>
 
+            {fuenteMensual && (
+              <View style={tw`self-start bg-yellow-100 px-3 py-1 rounded-full mt-2`}>
+                <Text style={tw`text-xs font-bold text-yellow-800`}>
+                  Fuente del mes: {fuenteMensual}
+                </Text>
+              </View>
+            )}
+
             <View style={tw`flex-row flex-wrap -mx-1 mt-3`}>
               <KpiCard
                 title="Egresos (Compras)"
