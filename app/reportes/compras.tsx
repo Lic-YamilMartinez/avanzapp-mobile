@@ -15,6 +15,7 @@ import { useReportes } from "../context/ReportesContext";
 type DNITCompra = {
   id: number;
   usuarioId?: number;
+  fuente?: "IVA" | "IRP";
   proveedorRuc?: string;
   proveedorNombre?: string;
   nroComprobante?: string;
@@ -32,6 +33,14 @@ type DNITCompra = {
   exenta?: number | string;
   totalComprobante?: number | string;
   baseImponible?: number | string;
+  montoCompra?: number | string;
+  montoIva?: number | string;
+  montoPagado?: number | string;
+  gastos?: number | string;
+  timbrado?: string;
+  rucTitular?: string;
+  rubroGastos?: string;
+  observacion?: string;
 
   afectacionExento?: string;
   afectacionGrav10?: string;
@@ -125,9 +134,12 @@ const isNC = (c: DNITCompra) => {
 
 const montoTotal = (c: DNITCompra) => {
   const total = toNum(c.totalComprobante);
-  return total !== 0
-    ? total
-    : toNum(c.gravada10) + toNum(c.gravada5) + toNum(c.exenta);
+  if (total !== 0) return total;
+
+  const totalIrp = toNum(c.montoCompra) + toNum(c.montoIva);
+  if (totalIrp !== 0) return totalIrp;
+
+  return toNum(c.gravada10) + toNum(c.gravada5) + toNum(c.exenta);
 };
 
 const periodoKey = (c: DNITCompra) => {
@@ -157,10 +169,11 @@ const sortPeriodos = (a: string, b: string) => {
 };
 
 const categoriaDesdeAfectacion = (c: DNITCompra): string => {
+  const rubroIrp = (c.rubroGastos || "").trim();
   const a10 = (c.afectacionGrav10 || "").trim();
   const a5 = (c.afectacionGrav5 || "").trim();
   const ex = (c.afectacionExento || "").trim();
-  return a10 || a5 || ex || "Sin categoría";
+  return rubroIrp || a10 || a5 || ex || "Sin categoría";
 };
 
 /* ===== Pantalla ===== */
